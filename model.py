@@ -62,8 +62,37 @@ def compute_node_degrees(src, dst, num_nodes, edge_weight=None):
 
     return torch.tensor(list(node_degree.values()), dtype=torch.float)
 
-# Step 4 - symmetric_normalize_edge_weights (not yet solved)
-# TODO: implement
+# Step 4 - symmetric_normalize_edge_weights
+def symmetric_normalize_edge_weights(src, dst, num_nodes, edge_weight=None):
+    """Compute symmetrically normalized edge weights w_ij / sqrt(d_i * d_j).
+
+    Args:
+        src (LongTensor): Source node indices of shape [E].
+        dst (LongTensor): Destination node indices of shape [E].
+        num_nodes (int): Number of nodes N.
+        edge_weight (FloatTensor, optional): Per-edge weights of shape [E].
+            Defaults to all ones (float32) when None.
+
+    Returns:
+        FloatTensor: Symmetrically normalized weights of shape [E].
+    """
+    # TODO: Compute symmetrically normalized edge weights for GCN-style propagation.
+    if edge_weight is None:
+        edge_weight = torch.tensor([1.0 for _ in range(src.shape[-1])], dtype=torch.float32)
+    
+    degree = {i: 0 for i in range(num_nodes)}
+    for i, node in enumerate(dst.tolist()):
+        degree[node] += edge_weight[i]
+
+    per_edge_factor = []
+    for i, edge in enumerate(zip(src.tolist(), dst.tolist())):
+        src_n, dst_n = edge
+        if degree[src_n] != 0 and degree[dst_n] != 0:
+            per_edge_factor.append(1 / ((degree[src_n] * degree[dst_n])**0.5 ))
+            per_edge_factor[-1] *= edge_weight[i]
+        else:
+            per_edge_factor.append(0)
+    return torch.tensor(per_edge_factor, dtype=torch.float32)
 
 # Step 5 - gather_source_node_features (not yet solved)
 # TODO: implement
